@@ -47,6 +47,8 @@ if __name__ == '__main__':
             'habitica'
         ],
 
+        extras_requires={":python_version=='3.4'": ['typing']},
+
         package_data={
             'habitica_planner': [
                 'i18n/*/LC_MESSAGES/*.mo'
