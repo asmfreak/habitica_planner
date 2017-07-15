@@ -1,0 +1,5 @@
+*__pycache__*
+.tox
+*.egg-info
+*.pot
+*new_*.po
