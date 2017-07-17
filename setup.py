@@ -16,9 +16,17 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import sys
 import setuptools
 
 
+install_requires = [
+    'PyYAML',
+    'plumbum',
+    'habitica'
+]
+if sys.version_info <= (3, 4):
+    install_requires.append('typing')
 # =====
 if __name__ == '__main__':
     setuptools.setup(
@@ -41,13 +49,7 @@ if __name__ == '__main__':
             ],
         },
 
-        install_requires=[
-            'PyYAML',
-            'plumbum',
-            'habitica'
-        ],
-
-        extras_requires={":python_version=='3.4'": ['typing']},
+        install_requires=install_requires,
 
         package_data={
             'habitica_planner': [
