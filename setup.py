@@ -20,6 +20,11 @@ import sys
 import setuptools
 
 
+def read(fname):
+    import os
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+
 install_requires = [
     'PyYAML',
     'plumbum',
@@ -31,12 +36,13 @@ if sys.version_info <= (3, 4):
 if __name__ == '__main__':
     setuptools.setup(
         name='habitica_planner',
-        version='0.1.1',
-        url='https://github.com/ASMfreaK/arensync',
+        version='0.1.2',
+        url='https://github.com/ASMfreaK/habitica_planner',
         license='GPLv3',
         author='Pavel Pletenev',
         author_email='cpp.create@gmail.com',
-        description='habitica-planner -- plan multiple recusive tasks with checklists',
+        description='habitica_planner -- plan multiple recusive tasks with checklists',
+        long_description=read('README.md'),
         platforms='any',
 
         packages=[
@@ -67,4 +73,5 @@ if __name__ == '__main__':
             'Topic :: Utilities',
             'Operating System :: POSIX :: Linux'
         ],
+
     )

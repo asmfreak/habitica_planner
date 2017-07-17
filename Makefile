@@ -12,3 +12,7 @@ habitica_planner/i18n/ru/LC_MESSAGES/habitica_planner.mo: habitica_planner/i18n/
 
 clean:
 	rm -f habitica_planner/i18n/messages.pot habitica_planner/i18n/new_ru.po
+
+pypi:
+	python setup.py sdist upload --identity="cpp.create@gmail.com" --sign
+	python setup.py bdist_wheel upload --identity="cpp.create@gmail.com" --sign

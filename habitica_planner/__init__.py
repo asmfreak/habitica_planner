@@ -1,5 +1,5 @@
 """
-    habitica-planner -- plan multiple recusive tasks with checklists
+    habitica_planner -- plan multiple recusive tasks with checklists
     Copyright 2017 Pavel Pletenev <cpp.create@gmail.com>
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
