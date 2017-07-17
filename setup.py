@@ -36,13 +36,17 @@ if sys.version_info <= (3, 4):
 if __name__ == '__main__':
     setuptools.setup(
         name='habitica_planner',
-        version='0.1.2',
+        version='0.1.3',
         url='https://github.com/ASMfreaK/habitica_planner',
         license='GPLv3',
         author='Pavel Pletenev',
         author_email='cpp.create@gmail.com',
         description='habitica_planner -- plan multiple recusive tasks with checklists',
-        long_description=read('README.md'),
+        long_description='''
+        habitica_planner
+        ================
+        Simple Python script to upload multiple tasks to Habitica.
+        ''',
         platforms='any',
 
         packages=[
