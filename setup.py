@@ -15,38 +15,33 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
+# pylint: disable=invalid-name
 import sys
 import setuptools
-
-
-def read(fname):
-    import os
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
 install_requires = [
     'PyYAML',
     'plumbum',
-    'habitica'
+    'habitica'  # this will be git until PR philadams/habitica#51 will be resolved
 ]
-if sys.version_info <= (3, 4):
+if sys.version_info < (3, 5):
     install_requires.append('typing')
 # =====
 if __name__ == '__main__':
     setuptools.setup(
         name='habitica_planner',
-        version='0.1.3',
+        version='0.1.5',
         url='https://github.com/ASMfreaK/habitica_planner',
         license='GPLv3',
         author='Pavel Pletenev',
         author_email='cpp.create@gmail.com',
         description='habitica_planner -- plan multiple recusive tasks with checklists',
-        long_description='''
+        long_description="""
         habitica_planner
         ================
         Simple Python script to upload multiple tasks to Habitica.
-        ''',
+        """,
         platforms='any',
 
         packages=[

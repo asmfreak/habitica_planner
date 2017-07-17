@@ -6,9 +6,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: 0.1\n"
+"Project-Id-Version: 0.1.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-07-13 01:18+0200\n"
+"POT-Creation-Date: 2017-07-18 00:44+0200\n"
 "PO-Revision-Date: 2017-07-13 01:18+0200\n"
 "Last-Translator:  <cpp.create@gmail.com>\n"
 "Language-Team: Russian\n"
@@ -19,23 +19,44 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: habitica_planner/planner.py:90
+#: habitica_planner/planner.py:99
 #, python-brace-format
 msgid "Task {self.name} with priority {self.priority}\n"
 msgstr "Задача {self.name} со сложностью {self.priority}\n"
 
-#: habitica_planner/planner.py:92
+#: habitica_planner/planner.py:102
 msgid "    - {}\n"
 msgstr "    - {}\n"
 
-#: habitica_planner/planner.py:117
+#: habitica_planner/planner.py:150
+msgid ""
+"\n"
+"#Write your tasks here, save and exit\n"
+"#Example:\n"
+"#- An example task\n"
+"#    - An example subtask\n"
+"#    - Second example subtask with priority:2.0\n"
+msgstr ""
+"\n"
+"#Составьте здесь ваши задачи и выйдете из редактора с сохраниением\n"
+"#Пример:\n"
+"#"
+"#- Задача для примера\n"
+"#    - Подзадача для примера\n"
+"#    - Вторая подзадача для примера со сложностью:2.0\n"
+
+#: habitica_planner/planner.py:161
+msgid "habitica_planner -- plan multiple recusive tasks with checklists"
+msgstr "habitica_planner -- планирование рекурсивных задач с подзадачами"
+
+#: habitica_planner/planner.py:181
 msgid "Found this this tasks"
 msgstr "Найдены следующие задачи:"
 
-#: habitica_planner/planner.py:119
+#: habitica_planner/planner.py:183
 msgid "Push to Habitica?[Y/n]"
 msgstr "Отправить их в Хабитику?[Д/н]"
 
-#: habitica_planner/planner.py:120
+#: habitica_planner/planner.py:184
 msgid "n"
 msgstr "н"

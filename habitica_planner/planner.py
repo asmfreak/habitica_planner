@@ -15,13 +15,17 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 # pylint: disable=invalid-name
-from typing import Union, List
+import os
+import sys
 import gettext
+import tempfile
+from typing import Union, List
 import pkg_resources
 import yaml
 from habitica.core import AUTH_CONF, load_auth
 import habitica.api as hapi
-from plumbum.cli import Application, ExistingFile
+from plumbum.cli import Application, Predicate
+from plumbum import local, FG
 
 
 def install(package_name='habitica_planner'):
@@ -40,10 +44,12 @@ _ = install()
 
 class Task:
     'self-descriptive'
-    def __init__(self, name: str = None, data: Union[List, int, float] = 1.0):
+    def __init__(self, name: str = None, data: Union[List, int, float] = 1.0) -> None:
         self.name = name
-        self.checklist = []
+        self.checklist = []  # type: List[Task]
         self.priority = 1.0
+        self.id = None  # type: Union[None, str]
+        self.checklist_id = None  # type: Union[None, str]
         if not isinstance(data, list):
             self.priority = data
             data = []
@@ -64,6 +70,8 @@ class Task:
                             'Invalid priority for task {}.\
                             Expected one of 0.5, 1, 1.5, 2. Got: {}'.format(self.name, e[k]))
                     continue
+                if k in ['id', 'checklist_id']:
+                    setattr(self, k, e[k])
                 if isinstance(e[k], (list, int, float)):
                     self.checklist.append(Task(k, e[k]))
                     continue
@@ -103,25 +111,74 @@ class Task:
             resp = api.user.tasks(
                 type='todo', text=self.name,
                 priority=str(self.priority), _method='post')
+            self.id = resp['id']
+            task_number = 0
             for task in self.checklist:
                 if task.name:
-                    api.tasks.checklist(
+                    task_number += 0
+                    resp = api.tasks.checklist(
                         _uri_template='{0}/{self.resource}/{aspect_id}/{self.aspect}',
-                        _id=resp['id'], text=task.name, _method='post')
+                        _id=self.id, text=task.name, _method='post')
+                    task.checklist_id = resp['checklist'][task_number]['id']
         for task in self.checklist:
             task.push(api)
 
+    def __iter__(self):
+        if self.name:
+            for prop in ['id', 'checklist_id', 'priority']:
+                val = getattr(self, prop)
+                if val:
+                    yield {prop: val}
+        for task in self.checklist:
+            if task.name:
+                yield {task.name: list(task)}
+
+
+def swap_out_err():
+    'swap stdout and stderr'
+    err = sys.stderr
+    sys.stderr = sys.stdout
+    sys.stdout = err
+
+
+@Predicate
+def OptionalFile(f):
+    'predicate like ExistingFile'
+    f = local.path(f)
+    if f.exists() and f.is_file():
+        return f
+
+
+EXAMPLE_TASK_FILE = _("""
+#Write your tasks here, save and exit
+#Example:
+#- An example task
+#    - An example subtask
+#    - Second example subtask with priority:2.0
+""")
+
 
 class HabiticaPlanner(Application):
-    'Main app'
-    # pylint: disable=arguments-differ
-    def main(self, file: ExistingFile):
+    # pylint: disable=arguments-differ,missing-docstring
+    __doc__ = _("habitica_planner -- plan multiple recusive tasks with checklists")  # noqa: Q000
+
+    def main(self, file: OptionalFile = None):
         'main algorithm'
         hab = hapi.Habitica(load_auth(AUTH_CONF))
-        with open(file) as f:
-            # inp = f.read()
-            d = yaml.load(f.read())
-        print(d)
+        if file is None:
+            editor = local[os.environ.get('EDITOR', 'nano')]
+            with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+                f.write(EXAMPLE_TASK_FILE)
+                f.file.close()
+                editor[f.name] & FG()  # pylint: disable=expression-not-assigned
+                with open(f.name) as newf:
+                    content = newf.read()
+                local['rm'](f.name)
+        else:
+            with open(file) as f:
+                content = f.read()
+        swap_out_err()
+        d = yaml.load(content)
         t = Task(data=d)
         print(_("Found this this tasks"))  # noqa: Q000
         print(t.will_be_pushed(), end='')
@@ -129,6 +186,9 @@ class HabiticaPlanner(Application):
         if r in ['n', _("n")]:  # noqa: Q000
             return 1
         t.push(hab)
+        d = list(t)  # type: ignore # because python/mypy#2220
+        swap_out_err()
+        print(yaml.dump(d, encoding='utf-8', allow_unicode=True).decode('utf-8'))
 
 
 def main():
