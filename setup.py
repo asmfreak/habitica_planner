@@ -19,6 +19,22 @@
 import sys
 import setuptools
 
+def maybe_dev_version():
+    """format a .devN if current installation isn't in upstream master"""
+    try:
+        from plumbum import local, CommandNotFound, ProcessExecutionError
+    except ImportError:
+        return ''
+    try:
+        git = local['git']
+        git('status')
+    except (CommandNotFound, ProcessExecutionError):
+        return ''
+    nc = git(*'rev-list --left-right --count master...origin/master'.split(' '))
+    nc = int(nc.split('\t')[0])
+    if nc == 0:
+        return ''  # just cloned or pushed - maybe a stable version
+    return '.dev{}'.format(nc)  # local dev version, different from upstream
 
 install_requires = [
     'PyYAML',
@@ -31,7 +47,7 @@ if sys.version_info < (3, 5):
 if __name__ == '__main__':
     setuptools.setup(
         name='habitica_planner',
-        version='0.1.5.dev1',
+        version='0.1.5'+maybe_dev_version(),
         url='https://github.com/ASMfreaK/habitica_planner',
         license='GPLv3',
         author='Pavel Pletenev',
