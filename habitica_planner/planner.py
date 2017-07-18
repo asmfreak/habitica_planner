@@ -25,6 +25,7 @@ import yaml
 from habitica.core import AUTH_CONF, load_auth
 import habitica.api as hapi
 from plumbum.cli import Application, Predicate
+from plumbum.cli.terminal import Progress
 from plumbum import local, FG
 
 
@@ -120,7 +121,7 @@ class Task:
                         _uri_template='{0}/{self.resource}/{aspect_id}/{self.aspect}',
                         _id=self.id, text=task.name, _method='post')
                     task.checklist_id = resp['checklist'][task_number]['id']
-        for task in self.checklist:
+        for task in Progress(self.checklist):
             task.push(api)
 
     def __iter__(self):
@@ -179,6 +180,9 @@ class HabiticaPlanner(Application):
                 content = f.read()
         swap_out_err()
         d = yaml.load(content)
+        if not d:
+            print(_("Tasks not found. Exiting."))  # noqa: Q000
+            return 1
         t = Task(data=d)
         print(_("Found this this tasks"))  # noqa: Q000
         print(t.will_be_pushed(), end='')

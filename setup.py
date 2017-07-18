@@ -31,7 +31,7 @@ if sys.version_info < (3, 5):
 if __name__ == '__main__':
     setuptools.setup(
         name='habitica_planner',
-        version='0.1.5',
+        version='0.1.5.dev1',
         url='https://github.com/ASMfreaK/habitica_planner',
         license='GPLv3',
         author='Pavel Pletenev',
