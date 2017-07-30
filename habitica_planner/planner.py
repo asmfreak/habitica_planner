@@ -161,7 +161,22 @@ EXAMPLE_TASK_FILE = _("""
 
 class HabiticaPlanner(Application):
     # pylint: disable=arguments-differ,missing-docstring
-    __doc__ = _("habitica_planner -- plan multiple recusive tasks with checklists")  # noqa: Q000
+    DESCRIPTION = _("habitica_planner -- plan multiple recusive tasks with checklists")  # noqa: Q000
+    VERSION = pkg_resources.get_distribution("habitica_planner").version
+
+    def main(self, *args):
+        if args:
+            print(_("Unknown command '{0!r}'").format(args[0]))
+            return 1   # error exit code
+        if not self.nested_command:           # will be ``None`` if no sub-command follows
+            print(_("No command given"))
+            return 1   # error exit code
+
+
+@HabiticaPlanner.subcommand('push')
+class PushData(Application):
+    # pylint: disable=arguments-differ,missing-docstring
+    __doc__ = _("push tasks from new file to Habitica server")  # noqa: Q000
 
     def main(self, file: OptionalFile = None):
         'main algorithm'
@@ -184,6 +199,10 @@ class HabiticaPlanner(Application):
             print(_("Tasks not found. Exiting."))  # noqa: Q000
             return 1
         t = Task(data=d)
+        if not t.is_new():
+            print(_("Found tasks already pushed to Habitica."))  # noqa: Q000
+            print(_("Please use 'update'. Exiting."))  # noqa: Q000
+            return 1
         print(_("Found this this tasks"))  # noqa: Q000
         print(t.will_be_pushed(), end='')
         r = input(_("Push to Habitica?[Y/n]"))  # noqa: Q000
@@ -197,7 +216,7 @@ class HabiticaPlanner(Application):
 
 def main():
     'main for console_scripts'
-    HabiticaPlanner().run()
+    sys.exit(HabiticaPlanner().run())
 
 
 if __name__ == '__main__':
