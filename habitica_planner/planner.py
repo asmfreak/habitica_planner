@@ -17,30 +17,20 @@
 # pylint: disable=invalid-name
 import os
 import sys
-import gettext
 import tempfile
+from textwrap import dedent
 from typing import Union, List
 import pkg_resources
 import yaml
-from habitica.core import AUTH_CONF, load_auth
-import habitica.api as hapi
+from habitipy.cli import ApplicationWithApi
+from habitipy.util import get_translation_for
 from plumbum.cli import Application, Predicate
 from plumbum.cli.terminal import Progress
 from plumbum import local, FG
 
 
-def install(package_name='habitica_planner'):
-    'finds and installs translation for package'
-    # pylint: disable=undefined-loop-variable
-    for localedir in pkg_resources.resource_filename(package_name, 'i18n'), None:
-        localefile = gettext.find(package_name, localedir)
-        if localefile:
-            break
-    gettext.install(package_name, localedir, names=('ngettext',))
-    return _
-
-
-_ = install()
+_translation = get_translation_for('habitica_planner')
+_, ngettext = _translation.gettext, _translation.ngettext
 
 
 class Task:
@@ -109,17 +99,19 @@ class Task:
     def push(self, api):
         'send data to habitica server'
         if self.name:
-            resp = api.user.tasks(
-                type='todo', text=self.name,
-                priority=str(self.priority), _method='post')
+            text = self.name + '  ![progress](http://progressed.io/bar/0 "progress")'
+            note = _("""Please, do not edit this by hand!
+            Update the YAML file you got from first upload and fix everything there,
+            then run `habitica_planner update` to push new values to server."""))
+            note = dedent(note).replace('\n',' ')
+            resp = api.tasks.user.post(
+                type='todo', text=text, notes=note, priority=str(self.priority))
             self.id = resp['id']
             task_number = 0
             for task in self.checklist:
                 if task.name:
-                    task_number += 0
-                    resp = api.tasks.checklist(
-                        _uri_template='{0}/{self.resource}/{aspect_id}/{self.aspect}',
-                        _id=self.id, text=task.name, _method='post')
+                    task_number += 1
+                    resp = api.tasks[self.id].checklist.post(text=task.name)
                     task.checklist_id = resp['checklist'][task_number]['id']
         for task in Progress(self.checklist):
             task.push(api)
@@ -133,6 +125,16 @@ class Task:
         for task in self.checklist:
             if task.name:
                 yield {task.name: list(task)}
+
+    def is_new(self):
+        'checks if this is a previously unpushed Task'
+        if self.name:
+            n = self.name and self.id is None
+        else:
+            n = True
+        for task in self.checklists:
+            n = n and task.is_new()
+        return n
 
 
 def swap_out_err():
@@ -151,36 +153,36 @@ def OptionalFile(f):
 
 
 EXAMPLE_TASK_FILE = _("""
-#Write your tasks here, save and exit
-#Example:
-#- An example task
-#    - An example subtask
-#    - Second example subtask with priority:2.0
+# Write your tasks here, save and exit
+# Example:
+# - An example task
+#     - An example subtask
+#     - Second example subtask with priority:2.0
 """)
 
 
 class HabiticaPlanner(Application):
     # pylint: disable=arguments-differ,missing-docstring
     DESCRIPTION = _("habitica_planner -- plan multiple recusive tasks with checklists")  # noqa: Q000
-    VERSION = pkg_resources.get_distribution("habitica_planner").version
+    VERSION = pkg_resources.get_distribution('habitica_planner').version
 
     def main(self, *args):
         if args:
             print(_("Unknown command '{0!r}'").format(args[0]))
             return 1   # error exit code
-        if not self.nested_command:           # will be ``None`` if no sub-command follows
+        if not self.nested_command:
             print(_("No command given"))
             return 1   # error exit code
 
 
 @HabiticaPlanner.subcommand('push')
-class PushData(Application):
+class PushData(ApplicationWithApi):
     # pylint: disable=arguments-differ,missing-docstring
     __doc__ = _("push tasks from new file to Habitica server")  # noqa: Q000
 
     def main(self, file: OptionalFile = None):
         'main algorithm'
-        hab = hapi.Habitica(load_auth(AUTH_CONF))
+        super().main()
         if file is None:
             editor = local[os.environ.get('EDITOR', 'nano')]
             with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
@@ -208,7 +210,7 @@ class PushData(Application):
         r = input(_("Push to Habitica?[Y/n]"))  # noqa: Q000
         if r in ['n', _("n")]:  # noqa: Q000
             return 1
-        t.push(hab)
+        t.push(self.api)
         d = list(t)  # type: ignore # because python/mypy#2220
         swap_out_err()
         print(yaml.dump(d, encoding='utf-8', allow_unicode=True).decode('utf-8'))

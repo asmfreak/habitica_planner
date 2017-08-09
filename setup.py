@@ -19,31 +19,10 @@
 import sys
 import setuptools
 
-
-def make_version(version: str):
-    """format a .devN if current installation isn't in upstream master"""
-    try:
-        from plumbum import local, CommandNotFound, ProcessExecutionError
-    except ImportError:
-        return version
-    try:
-        git = local['git']
-        git('status')
-    except (CommandNotFound, ProcessExecutionError):
-        return version
-    nc = git(*'rev-list --left-right --count master...{}'.format(version).split(' '))
-    nc = int(nc.split('\t')[0])
-    if nc == 0:
-        return version  # just cloned or pushed - maybe a stable version
-    return version + '.dev{}'.format(nc)  # local dev version, different from upstream
-
-with open('README') as f:
-    long_description = f.read()
-
 install_requires = [
     'PyYAML',
     'plumbum',
-    'habitica'  # this will be git until PR philadams/habitica#51 will be resolved
+    'habitipy'
 ]
 if sys.version_info < (3, 5):
     install_requires.append('typing')
@@ -51,17 +30,12 @@ if sys.version_info < (3, 5):
 if __name__ == '__main__':
     setuptools.setup(
         name='habitica_planner',
-        version=make_version('0.1.5'),
+        version='0.1.5',
         url='https://github.com/ASMfreaK/habitica_planner',
         license='GPLv3',
         author='Pavel Pletenev',
         author_email='cpp.create@gmail.com',
         description='habitica_planner -- plan multiple recusive tasks with checklists',
-        long_description="""
-        habitica_planner
-        ================
-        Simple Python script to upload multiple tasks to Habitica.
-        """,
         platforms='any',
 
         packages=[
@@ -77,7 +51,6 @@ if __name__ == '__main__':
         install_requires=install_requires,
 
         package_data={
-            '': ['README'],
             'habitica_planner': [
                 'i18n/*/LC_MESSAGES/*.mo'
             ]
